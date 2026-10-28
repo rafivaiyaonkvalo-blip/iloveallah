@@ -108,6 +108,10 @@ export interface InstantAmalItem {
   durationMinutes: number;   // আনুমানিক কত মিনিট লাগবে (১, ২ বা ৩ মিনিট)
   points: number;            // ৪ পয়েন্ট
   category: 'dhikr' | 'dua' | 'quran' | 'akhlaq' | 'salat';
+  timing?: string;           // কখন করতে হবে — হাদিসে যেভাবে বলা আছে
+  count?: number;            // কতবার — হাদিসে যেভাবে বলা আছে
+  pronunciation?: string;    // বাংলা উচ্চারণ — উৎসের অনুবাদে যেভাবে আছে
+  steps?: string[];          // আমল করার নিয়ম, ধাপে ধাপে
 }
 
 export interface CompletedAmalRecord {

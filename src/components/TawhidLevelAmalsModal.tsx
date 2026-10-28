@@ -248,7 +248,7 @@ export const TawhidLevelAmalsModal: React.FC<TawhidLevelAmalsModalProps> = ({
 
                   {record.arabic && (
                     <div className="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 my-2 text-right">
-                      <p className="font-arabic text-sm sm:text-base text-amber-300 leading-relaxed font-semibold">
+                      <p dir="rtl" lang="ar" className="font-arabic text-sm sm:text-base text-amber-300 leading-relaxed font-semibold">
                         {record.arabic}
                       </p>
                     </div>

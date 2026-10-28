@@ -61,6 +61,12 @@ export const InstantAmalCard: React.FC<InstantAmalCardProps> = ({
   const currentAmal: InstantAmalItem = filteredDeck[currentIndex % filteredDeck.length];
   const isAlreadyCompletedToday = gamification.completedAmalIds.includes(currentAmal.id);
 
+  // গণনা (তাসবীহ কাউন্টার): নতুন আমলে শূন্য থেকে শুরু
+  const [tapCount, setTapCount] = useState<number>(0);
+  useEffect(() => { setTapCount(0); }, [currentAmal.id]);
+  const target = currentAmal.count && currentAmal.count > 1 ? currentAmal.count : 0;
+  const countDone = target > 0 && tapCount >= target;
+
   const { currentLevel, nextLevel, progressInLevel, pointsNeeded } = useMemo(() => {
     return getSpiritualLevel(gamification.totalPoints);
   }, [gamification.totalPoints]);
@@ -251,11 +257,25 @@ export const InstantAmalCard: React.FC<InstantAmalCardProps> = ({
           <h4 className={`text-base sm:text-lg font-bold tracking-tight leading-snug ${isDark ? 'text-white' : 'text-slate-900'}`}>
             {currentAmal.title}
           </h4>
+          {(currentAmal.timing || currentAmal.count) && (
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {currentAmal.timing && (
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${isDark ? 'bg-amber-950/40 border-amber-500/30 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+                  🕒 কখন: {currentAmal.timing}
+                </span>
+              )}
+              {currentAmal.count && (
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${isDark ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
+                  🔁 {toBengaliNumber(currentAmal.count)} বার
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Arabic Box */}
         {currentAmal.arabic && (
-          <div className={`p-3 rounded-xl font-arabic text-base sm:text-lg leading-relaxed text-center my-2.5 border ${
+          <div dir="rtl" lang="ar" className={`p-3 rounded-xl font-arabic text-base sm:text-lg leading-relaxed text-center my-2.5 border ${
             isDark 
               ? 'bg-slate-900/90 border-cyan-500/30 text-cyan-100 shadow-[0_0_12px_rgba(6,182,212,0.1)]' 
               : 'bg-sky-50/80 border-sky-200 text-sky-950 font-semibold'
@@ -264,11 +284,59 @@ export const InstantAmalCard: React.FC<InstantAmalCardProps> = ({
           </div>
         )}
 
+        {/* বাংলা উচ্চারণ (উৎসের অনুবাদ থেকে হুবহু) */}
+        {currentAmal.pronunciation && (
+          <p className={`text-xs mb-2.5 leading-relaxed rounded-lg px-2.5 py-1.5 border ${isDark ? 'bg-slate-900/60 border-white/10 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+            <span className="font-bold text-cyan-500">উচ্চারণ: </span>{currentAmal.pronunciation}
+          </p>
+        )}
+
         {/* Bangla Meaning */}
         {currentAmal.banglaMeaning && (
           <p className={`text-xs mb-2.5 italic leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
             "{currentAmal.banglaMeaning}"
           </p>
+        )}
+
+        {/* আমল করার নিয়ম */}
+        {currentAmal.steps && currentAmal.steps.length > 0 && (
+          <div className={`text-xs mb-2.5 rounded-lg px-2.5 py-2 border ${isDark ? 'bg-slate-900/60 border-white/10 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+            <span className="font-bold text-cyan-500 block mb-1">আমলের নিয়ম:</span>
+            <ol className="list-decimal pl-4 space-y-0.5">
+              {currentAmal.steps.map((step, i) => <li key={i}>{step}</li>)}
+            </ol>
+          </div>
+        )}
+
+        {/* গণনার কাউন্টার: যতবার পড়তে হবে ততবার ট্যাপ */}
+        {target > 0 && (
+          <div className="mb-3">
+            <div className="flex items-stretch gap-2">
+              <button
+                type="button"
+                onClick={() => setTapCount(c => Math.min(c + 1, target))}
+                className={`flex-1 py-3 rounded-xl border font-bold text-sm transition-all active:scale-95 cursor-pointer select-none ${
+                  countDone
+                    ? 'bg-emerald-600 border-emerald-400 text-white'
+                    : isDark ? 'bg-cyan-950/50 border-cyan-500/40 text-cyan-200 hover:bg-cyan-900/50' : 'bg-cyan-50 border-cyan-300 text-cyan-900 hover:bg-cyan-100'
+                }`}
+                aria-label="প্রতিবার পড়ার পর ট্যাপ করুন"
+              >
+                {countDone ? '✓ পূর্ণ হয়েছে' : 'পড়ে ট্যাপ করুন'} — {toBengaliNumber(tapCount)}/{toBengaliNumber(target)}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTapCount(0)}
+                className={`px-3 rounded-xl border text-xs font-bold cursor-pointer ${isDark ? 'border-white/10 text-slate-400 hover:text-slate-200' : 'border-slate-200 text-slate-500 hover:text-slate-800'}`}
+                title="গণনা শূন্য করুন"
+              >
+                ↺
+              </button>
+            </div>
+            <div className={`w-full h-1.5 rounded-full overflow-hidden mt-1.5 ${isDark ? 'bg-slate-900' : 'bg-slate-200'}`}>
+              <div className="h-full bg-emerald-500 rounded-full transition-all duration-200" style={{ width: `${Math.round((tapCount / target) * 100)}%` }} />
+            </div>
+          </div>
         )}
 
         {/* Quest Reward & Benefit */}
@@ -285,7 +353,7 @@ export const InstantAmalCard: React.FC<InstantAmalCardProps> = ({
               </span>
               <span className="font-semibold block mt-0.5 leading-snug">{currentAmal.benefit}</span>
               <span className={`text-[10px] font-mono block mt-1 opacity-80 ${isDark ? 'text-cyan-400' : 'text-slate-600'}`}>
-                সহীহ দলীল: {currentAmal.reference}
+                দলীল: {currentAmal.reference}
               </span>
             </div>
           </div>
